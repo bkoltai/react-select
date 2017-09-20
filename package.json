@@ -9,7 +9,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HubSpot/react-select-plus.git"
+    "url": "https://github.com/bkoltai/react-select.git"
   },
   "dependencies": {
     "classnames": "^2.2.4",
