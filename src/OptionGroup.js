@@ -1,15 +1,17 @@
 import React from 'react';
-import createClass from 'create-react-class';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
-const OptionGroup = createClass({
-	propTypes: {
-		children: PropTypes.any,
-		className: PropTypes.string,             // className (based on mouse position)
-		label: PropTypes.node,                   // the heading to show above the child options
-		option: PropTypes.object.isRequired,     // object that is base for that option group
-	},
+class OptionGroup extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.blockEvent = this.blockEvent.bind(this);
+		this.handleMouseDown = this.handleMouseDown.bind(this);
+		this.handleTouchEnd = this.handleTouchEnd.bind(this);
+		this.handleTouchMove = this.handleTouchMove.bind(this);
+		this.handleTouchStart = this.handleTouchStart.bind(this);
+	}
 
 	blockEvent (event) {
 		event.preventDefault();
@@ -22,12 +24,12 @@ const OptionGroup = createClass({
 		} else {
 			window.location.href = event.target.href;
 		}
-	},
+	}
 
 	handleMouseDown (event) {
 		event.preventDefault();
 		event.stopPropagation();
-	},
+	}
 
 	handleTouchEnd(event){
 		// Check if the view is being dragged, In this case
@@ -35,17 +37,17 @@ const OptionGroup = createClass({
 		if(this.dragging) return;
 
 		this.handleMouseDown(event);
-	},
+	}
 
 	handleTouchMove (event) {
 		// Set a flag that the view is being dragged
 		this.dragging = true;
-	},
+	}
 
 	handleTouchStart (event) {
 		// Set a flag that the view is not being dragged
 		this.dragging = false;
-	},
+	}
 
 	render () {
 		var { option } = this.props;
@@ -53,20 +55,20 @@ const OptionGroup = createClass({
 
 		return option.disabled ? (
 			<div className={className}
-				onMouseDown={this.blockEvent}
-				onClick={this.blockEvent}>
+					 onMouseDown={this.blockEvent}
+					 onClick={this.blockEvent}>
 				{this.props.children}
 			</div>
 		) : (
 			<div className={className}
-				style={option.style}
-				onMouseDown={this.handleMouseDown}
-				onMouseEnter={this.handleMouseEnter}
-				onMouseMove={this.handleMouseMove}
-				onTouchStart={this.handleTouchStart}
-				onTouchMove={this.handleTouchMove}
-				onTouchEnd={this.handleTouchEnd}
-				title={option.title}>
+					 style={option.style}
+					 onMouseDown={this.handleMouseDown}
+					 onMouseEnter={this.handleMouseEnter}
+					 onMouseMove={this.handleMouseMove}
+					 onTouchStart={this.handleTouchStart}
+					 onTouchMove={this.handleTouchMove}
+					 onTouchEnd={this.handleTouchEnd}
+					 title={option.title}>
 				<div className="Select-option-group-label">
 					{this.props.label}
 				</div>
@@ -74,6 +76,13 @@ const OptionGroup = createClass({
 			</div>
 		);
 	}
-});
+}
 
-module.exports = OptionGroup;
+OptionGroup.propTypes = {
+	children: PropTypes.any,
+	className: PropTypes.string,             // className (based on mouse position)
+	label: PropTypes.node,                   // the heading to show above the child options
+	option: PropTypes.object.isRequired,     // object that is base for that option group
+};
+
+export default OptionGroup;

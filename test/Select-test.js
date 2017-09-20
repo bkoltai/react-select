@@ -22,8 +22,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var TestUtils = require('react-dom/test-utils');
 
-var Select = require('../src/Select');
-var Value = require('../src/Value');
+var Select = require('../src').default;
 
 // The displayed text of the currently selected item, when items collapsed
 var DISPLAYED_SELECTION_SELECTOR = '.Select-value';
@@ -2004,6 +2003,19 @@ describe('Select', () => {
 			]);
 		});
 
+		it('removes the last item with backspace', () => {
+
+			wrapper.setPropsForChild({
+				multi: false,
+				value: 'one'
+			});
+			onChange.reset();  // Ignore previous onChange calls
+
+			pressBackspace();
+
+			expect(onChange, 'was called with', null);
+		});
+
 		it('doesn\'t show the X if clearableValue=false', () => {
 
 			setValueProp(['two']);
@@ -2133,7 +2145,8 @@ describe('Select', () => {
 				value: '',
 				options: options,
 				searchable: false,
-				multi: true
+				multi: true,
+				closeOnSelect: false,
 			}, {
 				wireUpOnChangeToValue: true
 			});
@@ -2153,8 +2166,8 @@ describe('Select', () => {
 			clickArrowToOpen();
 
 			expect(instance,
-				'with event mouseDown', 'on', <div className="Select-option">Two</div>,
-				'with event mouseDown', 'on', <div className="Select-option">One</div>,
+				'with event', 'mouseDown', 'on', <div className="Select-option">Two</div>,
+				'with event', 'mouseDown', 'on', <div className="Select-option">One</div>,
 				'to contain',
 				<span className="Select-multi-value-wrapper">
 					<div><span className="Select-value-label">Two</span></div>
@@ -2726,7 +2739,7 @@ describe('Select', () => {
 				expect(spyFilterOption, 'was called with', defaultOptions[1], '');
 				expect(spyFilterOption, 'was called with', defaultOptions[2], '');
 				expect(spyFilterOption, 'was called with', defaultOptions[3], '');
-			});
+			}).timeout(5000);
 
 			describe('when entering text', () => {
 
@@ -2744,7 +2757,7 @@ describe('Select', () => {
 					expect(spyFilterOption, 'was called with', defaultOptions[1], 'xyz');
 					expect(spyFilterOption, 'was called with', defaultOptions[2], 'xyz');
 					expect(spyFilterOption, 'was called with', defaultOptions[3], 'xyz');
-				});
+				}).timeout(5000);
 
 				it('only shows the filtered option', () => {
 
@@ -3209,7 +3222,7 @@ describe('Select', () => {
 
 				instance = createControl({
 					options: defaultOptions,
-					onFocus: onFocus
+					onFocus: onFocus,
 				});
 			});
 
@@ -3219,27 +3232,51 @@ describe('Select', () => {
 			});
 		});
 
-		describe('openAfterFocus', () => {
-
-			var openAfterFocus;
-
-			beforeEach(() => {
-				openAfterFocus = sinon.spy();
-
+		describe('openOnClick', () => {
+			it('should open the menu on click when true', () => {
 				instance = createControl({
 					options: defaultOptions,
-					openAfterFocus: true
+					openOnClick: true,
+				}, {
+					initialFocus: false,
 				});
+				TestUtils.Simulate.mouseDown(ReactDOM.findDOMNode(instance).querySelector('.Select-control'), { button: 0 });
+				// need to simulate the focus on the input, it does not happen in jsdom
+				findAndFocusInputControl();
+				expect(instance.state.isOpen, 'to be true');
 			});
 
-			it('should show the options when focused', () => {
-				instance.focus();
+			it('should not open the menu on click when false', () => {
+				instance = createControl({
+					options: defaultOptions,
+					openOnClick: false,
+				}, {
+					initialFocus: false,
+				});
+				TestUtils.Simulate.mouseDown(ReactDOM.findDOMNode(instance).querySelector('.Select-control'), { button: 0 });
+				// need to simulate the focus on the input, it does not happen in jsdom
+				findAndFocusInputControl();
+				expect(instance.state.isOpen, 'to be falsy');
+			});
+		});
 
-				if (instance.state.isFocused && instance.state.openAfterFocus) {
-					expect(instance.state.isOpen, 'to equal', true);
-				}
+		describe('openOnFocus', () => {
+			// Note: createControl automatically focuses the control
+			it('should open the menu on focus when true', () => {
+				instance = createControl({
+					options: defaultOptions,
+					openOnFocus: true,
+				});
+				expect(instance.state.isOpen, 'to be true');
 			});
 
+			it('should not open the menu on focus when false', () => {
+				instance = createControl({
+					options: defaultOptions,
+					openOnFocus: false,
+				});
+				expect(instance.state.isOpen, 'to be falsy');
+			});
 		});
 
 		describe('onValueClick', () => {
@@ -4045,7 +4082,7 @@ describe('Select', () => {
 
 			it('sets the haspopup and expanded to true when menu is shown', () => {
 				expect(instance,
-					'with event keyDown', ARROW_DOWN, 'on', <div className="Select-control" />,
+					'with event', 'keyDown', ARROW_DOWN, 'on', <div className="Select-control" />,
 					'to contain', <input role="combobox" aria-haspopup="true" aria-expanded="true" />);
 			});
 
@@ -4112,7 +4149,8 @@ describe('Select', () => {
 						{ value: 'five', label: 'label five' }
 					],
 					value: [ 'three', 'two' ],
-					multi: true
+					multi: true,
+					closeOnSelect: false,
 				}, {
 					wireUpOnChangeToValue: true
 				});
@@ -4128,7 +4166,7 @@ describe('Select', () => {
 
 			it('hides the `press backspace to remove` message on blur', () => {
 				expect(instance,
-					'with event blur', 'on', <input role="combobox" />,
+					'with event', 'blur', 'on', <input role="combobox" />,
 					'not to contain',
 					<span className="Select-aria-only" aria-live="assertive">
 						Press backspace to remove label two
@@ -4148,8 +4186,8 @@ describe('Select', () => {
 			it('updates the active descendant after a selection', () => {
 
 				return expect(wrapper,
-					'with event keyDown', ARROW_DOWN, 'on', <div className="Select-control" />,
-					'with event keyDown', KEY_ENTER, 'on', <div className="Select-control" />,
+					'with event', 'keyDown', ARROW_DOWN, 'on', <div className="Select-control" />,
+					'with event', 'keyDown', KEY_ENTER, 'on', <div className="Select-control" />,
 					'queried for', <input role="combobox" />)
 					.then(input => {
 

@@ -2,7 +2,8 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Select from 'react-select-plus';
+import Select from 'react-select';
+import './example.less';
 
 import Creatable from './components/Creatable';
 import Contributors from './components/Contributors';
